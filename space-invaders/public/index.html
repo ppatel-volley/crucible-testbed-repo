@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Space Invaders</title>
+<style>
+  * { margin: 0; padding: 0; }
+  body { background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+  canvas { border: 1px solid #333; }
+  #ui { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); color: #0f0; font: 20px monospace; }
+</style>
+</head>
+<body>
+<div id="ui">Score: <span id="score">0</span></div>
+<canvas id="game" width="480" height="640"></canvas>
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const scoreEl = document.getElementById('score');
+const W = canvas.width, H = canvas.height;
+
+// Player
+const player = { x: W / 2 - 20, y: H - 50, w: 40, h: 20, speed: 5 };
+const keys = {};
+const bullets = [];
+let score = 0;
+let gameOver = false;
+
+// Aliens
+const COLS = 8, ROWS = 4, AW = 30, AH = 20, PAD = 12;
+let aliens = [];
+let alienDir = 1, alienSpeed = 1, alienDropTimer = 0;
+
+function initAliens() {
+  aliens = [];
+  const startX = (W - COLS * (AW + PAD)) / 2;
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      aliens.push({ x: startX + c * (AW + PAD), y: 60 + r * (AH + PAD), w: AW, h: AH, alive: true });
+    }
+  }
+}
+initAliens();
+
+// Input
+document.addEventListener('keydown', e => { keys[e.key] = true; if (e.key === ' ') e.preventDefault(); });
+document.addEventListener('keyup', e => { keys[e.key] = false; });
+
+let lastShot = 0;
+function shoot() {
+  const now = Date.now();
+  if (now - lastShot < 250) return;
+  lastShot = now;
+  bullets.push({ x: player.x + player.w / 2 - 2, y: player.y, w: 4, h: 10 });
+}
+
+function update() {
+  if (gameOver) return;
+
+  // Player movement
+  if (keys['ArrowLeft'] && player.x > 0) player.x -= player.speed;
+  if (keys['ArrowRight'] && player.x + player.w < W) player.x += player.speed;
+  if (keys[' ']) shoot();
+
+  // Bullets
+  for (let i = bullets.length - 1; i >= 0; i--) {
+    bullets[i].y -= 7;
+    if (bullets[i].y + bullets[i].h < 0) { bullets.splice(i, 1); continue; }
+    // Hit detection
+    for (const a of aliens) {
+      if (!a.alive) continue;
+      if (bullets[i] && bullets[i].x < a.x + a.w && bullets[i].x + bullets[i].w > a.x &&
+          bullets[i].y < a.y + a.h && bullets[i].y + bullets[i].h > a.y) {
+        a.alive = false;
+        bullets.splice(i, 1);
+        score += 10;
+        scoreEl.textContent = score;
+        break;
+      }
+    }
+  }
+
+  // Alien movement
+  const live = aliens.filter(a => a.alive);
+  if (live.length === 0) { initAliens(); alienSpeed += 0.3; return; }
+
+  let edgeHit = false;
+  for (const a of live) {
+    if ((alienDir === 1 && a.x + a.w + alienSpeed >= W) || (alienDir === -1 && a.x - alienSpeed <= 0)) {
+      edgeHit = true; break;
+    }
+  }
+  if (edgeHit) {
+    alienDir *= -1;
+    for (const a of live) a.y += AH;
+  } else {
+    for (const a of live) a.x += alienSpeed * alienDir;
+  }
+
+  // Check game over
+  for (const a of live) {
+    if (a.y + a.h >= player.y) { gameOver = true; break; }
+  }
+}
+
+function draw() {
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, W, H);
+
+  // Player
+  ctx.fillStyle = '#0f0';
+  ctx.fillRect(player.x, player.y, player.w, player.h);
+  // Gun barrel
+  ctx.fillRect(player.x + player.w / 2 - 3, player.y - 8, 6, 8);
+
+  // Bullets
+  ctx.fillStyle = '#ff0';
+  for (const b of bullets) ctx.fillRect(b.x, b.y, b.w, b.h);
+
+  // Aliens
+  ctx.fillStyle = '#fff';
+  for (const a of aliens) {
+    if (!a.alive) continue;
+    ctx.fillRect(a.x, a.y, a.w, a.h);
+    // Eyes
+    ctx.fillStyle = '#000';
+    ctx.fillRect(a.x + 6, a.y + 6, 5, 5);
+    ctx.fillRect(a.x + a.w - 11, a.y + 6, 5, 5);
+    ctx.fillStyle = '#fff';
+  }
+
+  if (gameOver) {
+    ctx.fillStyle = '#f00';
+    ctx.font = '48px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('GAME OVER', W / 2, H / 2);
+    ctx.font = '20px monospace';
+    ctx.fillText('Refresh to restart', W / 2, H / 2 + 40);
+  }
+}
+
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>

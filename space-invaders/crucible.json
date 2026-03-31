@@ -1,0 +1,10 @@
+{
+  "name": "space-invaders",
+  "displayName": "Space Invaders",
+  "description": "Classic arcade game - Bifrost prototype test",
+  "author": "pratik@volley.com",
+  "version": "0.1.0",
+  "gameId": "space-invaders",
+  "template": "custom",
+  "createdAt": "2026-03-30T00:00:00.000Z"
+}
