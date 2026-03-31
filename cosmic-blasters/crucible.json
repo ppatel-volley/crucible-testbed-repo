@@ -1,0 +1,19 @@
+{
+  "name": "cosmic-blasters",
+  "displayName": "Cosmic Blasters",
+  "description": "A space-themed TV party game",
+  "author": "pratik.patel@weekend.com",
+  "version": "0.1.0",
+  "gameId": "cosmic-blasters",
+  "tile": {
+    "imageUrl": "",
+    "heroImageUrl": ""
+  },
+  "createdAt": "2026-03-31T07:16:09.668Z",
+  "template": "hello-weekend",
+  "templateVersion": "0.1.0",
+  "checksums": {
+    "dockerfile": "9930c65a836fe67d27ab766ac6b4613dd190e3b82900dc2c317d46ec748b3862",
+    "ciWorkflow": "28399a112638e7267b124186a32c581304ca0716ccce768289bce463ed95abfc"
+  }
+}
